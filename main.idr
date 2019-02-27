@@ -1,3 +1,5 @@
+import Control.Monad.State
+
 infixr 5 :=
 infixr 6 *=
 
@@ -45,3 +47,21 @@ mutual
         (*)   : Exp s  -> Exp s' -> Exp Owned
         (/)   : Exp s  -> Exp s' -> Exp Owned
         Val   : Double -> Exp s
+
+ProgramState : Type
+ProgramState = State (List (String, String)) Int
+
+mutual
+    compileExp : Exp o -> Int
+
+    compileScope : Scope -> Int
+    compileScope Nil = 0
+    compileScope (x :: xs) = (compile x) + (compileScope xs)
+
+    assign : String -> Exp o -> Int
+    assign str exp = ?help
+
+    compile : Stmt -> Int
+    compile (While e s) = if (compileExp e) >= 1 then compileScope s else 0
+    compile (If e s1 s2) = if (compileExp e) >= 1 then compileScope s1 else compileScope s2
+    compile ((:=) x e) = assign x e
