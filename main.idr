@@ -29,7 +29,7 @@ mutual
         (:=)   : String -> Exp s -> Stmt
         (*=) : {auto prf : NotOwned s} -> String -> Exp s -> Stmt -- {auto prf : ...} is an automatic proof for s
         Concat : Stmt   -> Stmt  -> Stmt 
-        E      : Exp s  -> Stmt
+        Sc     : Scope  -> Stmt
         Return : Exp s  -> Stmt
 
     data Scope : Type where -- While (X "foo") [Return (X "foo")]
@@ -38,47 +38,42 @@ mutual
 
     data Exp  : Ownership -> Type where 
         X     : String -> Exp Owned
-        Sc    : Scope  -> Exp s
         Deref : String -> Exp s -- not sure
         At    : String -> Exp Unique
         Amp   : String -> Exp Shared
         (+)   : Exp s  -> Exp s' -> Exp Owned
         (-)   : Exp s  -> Exp s' -> Exp Owned
         (*)   : Exp s  -> Exp s' -> Exp Owned
-        (/)   : Exp s  -> Exp s' -> Exp Owned
-        Val   : Double -> Exp s
+        Val   : Int -> Exp s
 
 ProgramState : Type
 ProgramState = State (List (String, String)) Int
 
 mutual
-    compileExp : Exp o -> Double
+    compileExp : Exp o -> Int
     compileExp (X s) = compileExp (lookup s)
-    compileExp (Sc s) = compileScope s
     compileExp (Deref s) = compileExp (lookup s)
     compileExp (At s) = compileExp (lookup s)
     compileExp (Amp s) = compileExp (lookup s)
     compileExp ((+) e1 e2) = compileExp e1 + compileExp e2
     compileExp ((-) e1 e2) = compileExp e1 - compileExp e2
     compileExp ((*) e1 e2) = compileExp e1 * compileExp e2
-    compileExp ((/) e1 e2) = compileExp e1 / compileExp e2
     compileExp (Val v) = v
 
-    compileScope : Scope -> Double
+    compileScope : Scope -> Int
     compileScope Nil = 0
     compileScope (x :: xs) = (compile x) + (compileScope xs)
 
-    assign : String -> Exp o -> Double
+    assign : String -> Exp o -> Int
     assign str exp = ?help
 
     lookup : String -> Exp Owned
     assign str = ?help
 
-    compile : Stmt -> Double
+    compile : Stmt -> Int
     compile (While e s) = if (compileExp e) >= 1 then compileScope s else 0
     compile (If e s1 s2) = if (compileExp e) >= 1 then compileScope s1 else compileScope s2
     compile ((:=) x e) = assign x e
     compile (Concat s1 s2) = compile s1 + compile s2
-    compile (E e) = compileExp e --dette kommer til at returnere, det bør det ikke
     compile (Return e) = compileExp e
 
