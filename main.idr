@@ -52,16 +52,33 @@ ProgramState : Type
 ProgramState = State (List (String, String)) Int
 
 mutual
-    compileExp : Exp o -> Int
+    compileExp : Exp o -> Double
+    compileExp (X s) = compileExp (lookup s)
+    compileExp (Sc s) = compileScope s
+    compileExp (Deref s) = compileExp (lookup s)
+    compileExp (At s) = compileExp (lookup s)
+    compileExp (Amp s) = compileExp (lookup s)
+    compileExp ((+) e1 e2) = compileExp e1 + compileExp e2
+    compileExp ((-) e1 e2) = compileExp e1 - compileExp e2
+    compileExp ((*) e1 e2) = compileExp e1 * compileExp e2
+    compileExp ((/) e1 e2) = compileExp e1 / compileExp e2
+    compileExp (Val v) = v
 
-    compileScope : Scope -> Int
+    compileScope : Scope -> Double
     compileScope Nil = 0
     compileScope (x :: xs) = (compile x) + (compileScope xs)
 
-    assign : String -> Exp o -> Int
+    assign : String -> Exp o -> Double
     assign str exp = ?help
 
-    compile : Stmt -> Int
+    lookup : String -> Exp Owned
+    assign str = ?help
+
+    compile : Stmt -> Double
     compile (While e s) = if (compileExp e) >= 1 then compileScope s else 0
     compile (If e s1 s2) = if (compileExp e) >= 1 then compileScope s1 else compileScope s2
     compile ((:=) x e) = assign x e
+    compile (Concat s1 s2) = compile s1 + compile s2
+    compile (E e) = compileExp e --dette kommer til at returnere, det bør det ikke
+    compile (Return e) = compileExp e
+
